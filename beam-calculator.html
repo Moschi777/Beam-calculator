@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free Beam Deflection Calculator: Simply Supported & Cantilever</title>
+<meta name="description" content="Free online beam deflection calculator. Get max deflection, bending moment and stress for simply supported and cantilever beams with point or distributed loads.">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#14202b;--mute:#5b6b7a;--line:#d5dce3;--acc:#2f5bea;--acc-ink:#fff;--ok:#1a7f4b;--bad:#c0392b;--slot:#e3e8ed;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--card:#1b222a;--ink:#e8edf2;--mute:#93a1af;--line:#2b3540;--acc:#6f93ff;--acc-ink:#0d1320;--ok:#4fd08a;--bad:#ff7b6b;--slot:#222b34}}
+:root[data-theme="dark"]{--bg:#12171d;--card:#1b222a;--ink:#e8edf2;--mute:#93a1af;--line:#2b3540;--acc:#6f93ff;--acc-ink:#0d1320;--ok:#4fd08a;--bad:#ff7b6b;--slot:#222b34}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Archivo,system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:30px;line-height:1.1;font-weight:800;margin:8px 0 6px;letter-spacing:-.02em}
+h2{font-size:18px;margin:0 0 12px;font-weight:600}
+p.lead{color:var(--mute);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.seg button{font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:14px;color:var(--mute)}
+input,select{width:100%;font:inherit;font-size:16px;padding:10px;margin-top:4px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+svg{width:100%;height:auto;display:block}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.res div{border:1px solid var(--line);border-radius:10px;padding:10px}
+.res b{display:block;font-size:24px;font-weight:800;letter-spacing:-.01em}
+.res span{font-size:13px;color:var(--mute)}
+#chk{margin:10px 0 0;font-weight:600}
+.slot{background:var(--slot);border:1px dashed var(--line);border-radius:10px;min-height:90px;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:13px;margin-bottom:14px}
+.aff a{display:block;padding:10px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}
+.aff a:first-of-type{border-top:0}
+.aff a span{display:block;font-size:13px;color:var(--mute)}
+.aff a b{color:var(--acc)}
+small{color:var(--mute);font-size:12px}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>Beam deflection calculator</h1>
+<p class="lead">Pick a beam, add a load, and get the deflection, bending moment and stress for a rectangular section.</p>
+
+<div class="card">
+  <div class="seg" id="sup" role="group" aria-label="Support">
+    <button data-v="ss" aria-pressed="true">Simply supported</button>
+    <button data-v="ct" aria-pressed="false">Cantilever</button>
+  </div>
+  <div class="seg" id="ld" role="group" aria-label="Load">
+    <button data-v="pt" aria-pressed="true">Point load</button>
+    <button data-v="ud" aria-pressed="false">Distributed load</button>
+  </div>
+  <div class="grid">
+    <label>Length (m)<input id="L" type="number" inputmode="decimal" value="2" min="0.01" step="any"></label>
+    <label><span id="lblLoad">Load (N)</span><input id="W" type="number" inputmode="decimal" value="5000" min="0" step="any"></label>
+    <label>Material<select id="mat">
+      <option value="200">Steel (200 GPa)</option>
+      <option value="69">Aluminium (69 GPa)</option>
+      <option value="116">Titanium (116 GPa)</option>
+      <option value="11">Pine wood (11 GPa)</option>
+    </select></label>
+    <label>Width b (mm)<input id="b" type="number" inputmode="decimal" value="50" min="1" step="any"></label>
+    <label>Height h (mm)<input id="h" type="number" inputmode="decimal" value="100" min="1" step="any"></label>
+  </div>
+</div>
+
+<div class="card">
+  <svg id="fig" viewBox="0 0 360 150" role="img" aria-label="Beam diagram, deflection exaggerated"></svg>
+  <small>Shape exaggerated for clarity. The load is at mid-span (supported) or at the free end (cantilever).</small>
+</div>
+
+<div class="card">
+  <h2>Results</h2>
+  <div class="res">
+    <div><b id="rD">–</b><span>Max deflection</span></div>
+    <div><b id="rM">–</b><span>Max bending moment</span></div>
+    <div><b id="rS">–</b><span>Max bending stress</span></div>
+    <div><b id="rR">–</b><span>Span / deflection</span></div>
+  </div>
+  <p id="chk"></p>
+  <small>Assumes small deflection, uniform section and a beam's own weight ignored. Check stress against your material's yield strength.</small>
+</div>
+
+<!-- AdSense: after approval, replace the next div's contents with your ad code -->
+<div class="slot" id="ad1">Ad space</div>
+
+<div class="card aff">
+  <h2>Useful for this kind of work</h2>
+  <a href="https://www.amazon.com/s?k=shigley+mechanical+engineering+design" target="_blank" rel="sponsored noopener"><b>Shigley's Mechanical Engineering Design</b><span>The standard textbook for beams, stress and machine elements</span></a>
+  <a href="https://www.amazon.com/s?k=digital+caliper" target="_blank" rel="sponsored noopener"><b>Digital caliper</b><span>For measuring section sizes accurately</span></a>
+  <a href="https://www.amazon.com/s?k=casio+fx-991+scientific+calculator" target="_blank" rel="sponsored noopener"><b>Scientific calculator</b><span>Handy for checking results by hand</span></a>
+  <small>Affiliate links: this site may earn a commission if you buy, at no extra cost to you.</small>
+</div>
+
+<div class="slot" id="ad2">Ad space</div>
+</main>
+
+<script>
+(function(){
+var S={sup:'ss',ld:'pt'};
+// MONEY SETUP: paste your Amazon Associates tag between the quotes, e.g. 'yourname-20'
+var AMAZON_TAG='';
+if(AMAZON_TAG){document.querySelectorAll('.aff a').forEach(function(a){a.href+='&tag='+encodeURIComponent(AMAZON_TAG)})}
+var $=function(i){return document.getElementById(i)};
+function fmt(x,d){return isFinite(x)?x.toLocaleString(undefined,{maximumFractionDigits:d}):'–'}
+// normalised deflected shapes (L=1)
+var shape={
+ sspt:function(x){x=x>.5?1-x:x;return x*(3-4*x*x)},
+ ssud:function(x){return x*(1-2*x*x+x*x*x)},
+ ctpt:function(x){return x*x*(3-x)},
+ ctud:function(x){return x*x*(6-4*x+x*x)}
+};
+function draw(){
+ var k=S.sup+S.ld,f=shape[k],n=48,pts=[],mx=0,i;
+ for(i=0;i<=n;i++){mx=Math.max(mx,f(i/n))}
+ var x0=30,w=300,y0=50,A=55;
+ for(i=0;i<=n;i++){pts.push((x0+w*i/n).toFixed(1)+','+(y0+A*f(i/n)/mx).toFixed(1))}
+ var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+w)+'" y2="'+y0+'" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>';
+ s+='<polyline fill="none" stroke="var(--acc)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" points="'+pts.join(' ')+'"/>';
+ if(S.sup==='ss'){
+  s+='<path d="M'+x0+' '+y0+' l-10 20 h20z M'+(x0+w)+' '+y0+' l-10 20 h20z" fill="var(--mute)"/>';
+ }else{
+  s+='<rect x="'+(x0-12)+'" y="'+(y0-30)+'" width="12" height="90" fill="var(--mute)"/>';
+ }
+ var ar=function(x,y1,y2){return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="var(--bad)" stroke-width="2"/><path d="M'+(x-4)+' '+(y2-6)+' L'+x+' '+y2+' L'+(x+4)+' '+(y2-6)+'" fill="none" stroke="var(--bad)" stroke-width="2"/>'};
+ if(S.ld==='pt'){
+  var px=S.sup==='ss'?x0+w/2:x0+w, py=y0+(S.sup==='ss'?A:A);
+  s+=ar(px,py-60>0?py-60:5,py-2);
+ }else{
+  for(i=0;i<=10;i++){var xx=x0+w*i/10;s+=ar(xx,10,y0+A*f(i/10)/mx-18>20?y0+A*f(i/10)/mx-18:30)}
+  s+='<line x1="'+x0+'" y1="10" x2="'+(x0+w)+'" y2="10" stroke="var(--bad)" stroke-width="2"/>';
+ }
+ $('fig').innerHTML=s;
+}
+function calc(){
+ var L=+$('L').value,W=+$('W').value,E=+$('mat').value*1e9,b=+$('b').value/1e3,h=+$('h').value/1e3;
+ var I=b*h*h*h/12,d,M;
+ if(!(L>0&&b>0&&h>0&&W>=0)){['rD','rM','rS','rR'].forEach(function(i){$(i).textContent='–'});$('chk').textContent='Enter positive values for every field.';return}
+ if(S.sup==='ss'&&S.ld==='pt'){d=W*Math.pow(L,3)/(48*E*I);M=W*L/4}
+ if(S.sup==='ss'&&S.ld==='ud'){d=5*W*Math.pow(L,4)/(384*E*I);M=W*L*L/8}
+ if(S.sup==='ct'&&S.ld==='pt'){d=W*Math.pow(L,3)/(3*E*I);M=W*L}
+ if(S.sup==='ct'&&S.ld==='ud'){d=W*Math.pow(L,4)/(8*E*I);M=W*L*L/2}
+ var sig=M*(h/2)/I/1e6,ratio=d>0?L/d:Infinity;
+ $('rD').textContent=fmt(d*1e3,2)+' mm';
+ $('rM').textContent=fmt(M,0)+' N·m';
+ $('rS').textContent=fmt(sig,1)+' MPa';
+ $('rR').textContent=ratio===Infinity?'–':'L / '+fmt(ratio,0);
+ var ok=ratio>=360,c=$('chk');
+ c.textContent=ok?'Stiffness: within the common L/360 limit.':'Stiffness: exceeds the common L/360 limit. Try a taller section or a stiffer material.';
+ c.style.color=ok?'var(--ok)':'var(--bad)';
+}
+function setSeg(id,key,after){
+ var bs=$(id).querySelectorAll('button');
+ bs.forEach(function(btn){btn.addEventListener('click',function(){
+  S[key]=btn.dataset.v;bs.forEach(function(o){o.setAttribute('aria-pressed',o===btn)});after()})});
+}
+function upd(){
+ $('lblLoad').textContent=S.ld==='pt'?'Load (N)':'Load (N/m)';
+ draw();calc();
+}
+setSeg('sup','sup',upd);setSeg('ld','ld',upd);
+['L','W','mat','b','h'].forEach(function(i){$(i).addEventListener('input',calc)});
+upd();
+})();
+</script>
+</body>
+</html>
